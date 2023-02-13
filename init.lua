@@ -30,7 +30,7 @@ function activate_other_screen()
 end
 
 -- 显示屏之间切换焦点
-hs.hotkey.bind({ "cmd" }, "1", function() -- does the keybinding
+hs.hotkey.bind({ "cmd" }, "escape", function() -- does the keybinding
 	activate_other_screen()
 end)
 ----------------------------------------------------------------------------------------------------
