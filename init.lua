@@ -19,8 +19,8 @@ function changeVolume(diff)
 	end
 end
 
-hs.hotkey.bind({ "cmd" }, "j", changeVolume(-1))
-hs.hotkey.bind({ "cmd" }, "k", changeVolume(1))
+hs.hotkey.bind({ "cmd" }, "j", changeVolume(-2))
+hs.hotkey.bind({ "cmd" }, "k", changeVolume(2))
 
 ----------------------------------------------------------------------------------------------------
 
