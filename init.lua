@@ -255,14 +255,14 @@ end
 ----------------------------------------------------------------------------------------------------
 -- 在浏览器中打开 Hammerspoon API 手册
 ----------------------------------------------------------------------------------------------------
-hsman_keys = hsman_keys or { "alt", "H" }
-if string.len(hsman_keys[2]) > 0 then
-	spoon.ModalMgr.supervisor:bind(hsman_keys[1], hsman_keys[2], "查看 Hammerspoon 手册", function()
-		hs.doc.hsdocs.forceExternalBrowser(true)
-		hs.doc.hsdocs.moduleEntitiesInSidebar(true)
-		hs.doc.hsdocs.help()
-	end)
-end
+-- hsman_keys = hsman_keys or { "alt", "H" }
+-- if string.len(hsman_keys[2]) > 0 then
+--	spoon.ModalMgr.supervisor:bind(hsman_keys[1], hsman_keys[2], "查看 Hammerspoon 手册", function()
+--		hs.doc.hsdocs.forceExternalBrowser(true)
+--		hs.doc.hsdocs.moduleEntitiesInSidebar(true)
+--		hs.doc.hsdocs.help()
+--	end)
+-- end
 
 ----------------------------------------------------------------------------------------------------
 -- countdownM 倒计时配置
@@ -310,12 +310,12 @@ end
 ----------------------------------------------------------------------------------------------------
 -- 锁屏
 ----------------------------------------------------------------------------------------------------
-hslock_keys = hslock_keys or { "alt", "L" }
-if string.len(hslock_keys[2]) > 0 then
-	spoon.ModalMgr.supervisor:bind(hslock_keys[1], hslock_keys[2], "锁屏", function()
-		hs.caffeinate.lockScreen()
-	end)
-end
+-- hslock_keys = hslock_keys or { "alt", "L" }
+-- if string.len(hslock_keys[2]) > 0 then
+--	spoon.ModalMgr.supervisor:bind(hslock_keys[1], hslock_keys[2], "锁屏", function()
+--		hs.caffeinate.lockScreen()
+--	end)
+-- end
 
 ----------------------------------------------------------------------------------------------------
 -- 窗口管理
