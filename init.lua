@@ -125,13 +125,13 @@ end
 ----------------------------------------------------------------------------------------------------
 -- 定义 windowHints 快捷键
 ----------------------------------------------------------------------------------------------------
-hswhints_keys = hswhints_keys or { "alt", "tab" }
-if string.len(hswhints_keys[2]) > 0 then
-	spoon.ModalMgr.supervisor:bind(hswhints_keys[1], hswhints_keys[2], "WindowHints 快速切换应用", function()
-		spoon.ModalMgr:deactivateAll()
-		hs.hints.windowHints()
-	end)
-end
+-- hswhints_keys = hswhints_keys or { "alt", "tab" }
+-- if string.len(hswhints_keys[2]) > 0 then
+	-- spoon.ModalMgr.supervisor:bind(hswhints_keys[1], hswhints_keys[2], "WindowHints 快速切换应用", function()
+		-- spoon.ModalMgr:deactivateAll()
+		-- hs.hints.windowHints()
+	-- end)
+-- end
 
 ----------------------------------------------------------------------------------------------------
 --------------------------------------- appM 快速打开应用 ---------------------------------------------
