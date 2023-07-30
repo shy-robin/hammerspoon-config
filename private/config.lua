@@ -106,7 +106,7 @@ hsupervisor_keys = {{"cmd", "shift", "ctrl"}, "Q"}
 hsreload_keys = {{"cmd", "shift", "ctrl"}, "R"}
 
 -- 显示各种模式绑定快捷键
-hshelp_keys = {{"alt", "shift"}, "/"}
+hshelp_keys = {{"alt", "shift"}, "h"}
 
 
 ----------------------------------------------------------------------------------------------------
