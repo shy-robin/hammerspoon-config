@@ -6,7 +6,36 @@
 
 ----------------------------------------------------------------------------------------------------
 
-function changeVolume(diff)
+--          ╭─────────────────────────────────────────────────────────╮
+--          │                      提示信息配置                       │
+--          ╰─────────────────────────────────────────────────────────╯
+
+-- hs.hotkey.alertDuration = 0
+-- hs.hints.showTitleThresh = 0
+-- hs.window.animationDuration = 0
+
+hs.alert.defaultStyle = {
+	strokeWidth = 0,
+	strokeColor = { white = 0, alpha = 1 },
+	fillColor = { white = 0, alpha = 0.5 },
+	textColor = { white = 1, alpha = 1 },
+	textFont = ".AppleSystemUIFont",
+	textSize = 18,
+	radius = 18,
+	atScreenEdge = 0,
+	fadeInDuration = 0.15,
+	fadeOutDuration = 0.15,
+	padding = 16,
+}
+
+--          ╭─────────────────────────────────────────────────────────╮
+--          │                        调节音量                         │
+--          ╰─────────────────────────────────────────────────────────╯
+
+local hyperKey = { "cmd", "alt", "ctrl", "shift" }
+local mediaKey = { "cmd", "alt" }
+
+local function changeVolume(diff)
 	return function()
 		local current = hs.audiodevice.defaultOutputDevice():volume()
 		local new = math.min(100, math.max(0, math.floor(current + diff)))
@@ -14,316 +43,35 @@ function changeVolume(diff)
 			hs.audiodevice.defaultOutputDevice():setMuted(false)
 		end
 		hs.alert.closeAll(0.0)
-		hs.alert.show("Volume " .. new .. "%", {}, 0.5)
+		hs.alert.show("音量：" .. new .. "%", {}, 0.5)
 		hs.audiodevice.defaultOutputDevice():setVolume(new)
 	end
 end
 
-hs.hotkey.bind({ "cmd" }, "j", changeVolume(-2))
-hs.hotkey.bind({ "cmd" }, "k", changeVolume(2))
+hs.hotkey.bind(mediaKey, "J", changeVolume(-2))
+hs.hotkey.bind(mediaKey, "K", changeVolume(2))
 
-----------------------------------------------------------------------------------------------------
+--          ╭─────────────────────────────────────────────────────────╮
+--          │                      重新加载配置                       │
+--          ╰─────────────────────────────────────────────────────────╯
 
-local function focus_other_screen() -- focuses the other screen
-	local screen = hs.mouse.getCurrentScreen()
-	local nextScreen = screen:next()
-	local rect = nextScreen:fullFrame()
-	local center = hs.geometry.rectMidPoint(rect)
-	hs.mouse.setAbsolutePosition(center)
+local function reloadConfig()
+	hs.reload()
 end
+hs.hotkey.bind(hyperKey, "R", "reload config", reloadConfig)
+hs.alert.show("配置已重载！")
 
-function get_window_under_mouse() -- from https://gist.github.com/kizzx2/e542fa74b80b7563045a
-	local my_pos = hs.geometry.new(hs.mouse.getAbsolutePosition())
-	local my_screen = hs.mouse.getCurrentScreen()
-	return hs.fnutils.find(hs.window.orderedWindows(), function(w)
-		return my_screen == w:screen() and my_pos:inside(w:frame())
-	end)
-end
+--          ╭─────────────────────────────────────────────────────────╮
+--          │                        窗口管理                         │
+--          ╰─────────────────────────────────────────────────────────╯
 
-function activate_other_screen()
-	focus_other_screen()
-	local win = get_window_under_mouse()
-	-- now activate that window
-	win:focus()
-end
-
--- 显示屏之间切换焦点
-hs.hotkey.bind({ "cmd" }, "escape", function() -- does the keybinding
-	activate_other_screen()
-end)
-----------------------------------------------------------------------------------------------------
-hs.hotkey.alertDuration = 0
-hs.hints.showTitleThresh = 0
-hs.window.animationDuration = 0
-
-----------------------------------------------------------------------------------------------------
------------------------------------------- 配置设置 -------------------------------------------------
--- 配置文件
--- 使用自定义配置 （如果存在的话）
-----------------------------------------------------------------------------------------------------
-custom_config = hs.fs.pathToAbsolute(os.getenv("HOME") .. "/.config/hammerspoon/private/config.lua")
-if custom_config then
-	print("加载自定义配置文件。")
-	dofile(os.getenv("HOME") .. "/.config/hammerspoon/private/config.lua")
-	privatepath = hs.fs.pathToAbsolute(hs.configdir .. "/private/config.lua")
-	if privatepath then
-		hs.alert("已发现你的私有配置，将优先使用它。")
-	end
-else
-	-- 否则使用默认配置
-	if not privatepath then
-		privatepath = hs.fs.pathToAbsolute(hs.configdir .. "/private")
-		-- 如果没有 `~/.hammerspoon/private` 目录，则创建它。
-		hs.fs.mkdir(hs.configdir .. "/private")
-	end
-	privateconf = hs.fs.pathToAbsolute(hs.configdir .. "/private/config.lua")
-	if privateconf then
-		-- 加载自定义配置，如果存在的话
-		require("private/config")
-	end
-end
-
-hsreload_keys = hsreload_keys or { { "cmd", "shift", "ctrl" }, "R" }
-if string.len(hsreload_keys[2]) > 0 then
-	hs.hotkey.bind(hsreload_keys[1], hsreload_keys[2], "重新加载配置!", function()
-		hs.reload()
-	end)
-	hs.alert.show("配置文件已经重新加载！ ")
-end
-
-----------------------------------------------------------------------------------------------------
----------------------------------------- Spoons 加载项 ----------------------------------------------
-----------------------------------------------------------------------------------------------------
--- 加载 Spoon
-----------------------------------------------------------------------------------------------------
 hs.loadSpoon("ModalMgr")
+hs.loadSpoon("WinWin")
 
--- 定义默认加载的 Spoons
-if not hspoon_list then
-	hspoon_list = {
-		"AClock", -- 一个钟
-		"ClipShow", -- 剪切板
-		"KSheet", -- 快捷键
-		"CountDown", -- 倒计时
-		"WinWin", -- 窗口管理
-		"VolumeScroll", -- 鼠标滚轮调节音量
-		-- "PopupTranslateSelection", -- 翻译选中文本
-		"SpeedMenu", -- 菜单栏显示网速
-		"MountedVolumes", -- 显示已安装卷的饼图
-		"HeadphoneAutoPause", -- 断开耳机自动暂停播放
-		"HSearch",
-	}
-end
-
--- 加载 Spoons
-for _, v in pairs(hspoon_list) do
-	hs.loadSpoon(v)
-end
-
-----------------------------------------------------------------------------------------------------
--- 定义各种模式快捷键绑定
-----------------------------------------------------------------------------------------------------
--- 定义 windowHints 快捷键
-----------------------------------------------------------------------------------------------------
--- hswhints_keys = hswhints_keys or { "alt", "tab" }
--- if string.len(hswhints_keys[2]) > 0 then
-	-- spoon.ModalMgr.supervisor:bind(hswhints_keys[1], hswhints_keys[2], "WindowHints 快速切换应用", function()
-		-- spoon.ModalMgr:deactivateAll()
-		-- hs.hints.windowHints()
-	-- end)
--- end
-
-----------------------------------------------------------------------------------------------------
---------------------------------------- appM 快速打开应用 ---------------------------------------------
--- appM 模式 快速打开应用
-----------------------------------------------------------------------------------------------------
-spoon.ModalMgr:new("appM")
-local cmodal = spoon.ModalMgr.modal_list["appM"]
-cmodal:bind("", "escape", "退出 ", function()
-	spoon.ModalMgr:deactivate({ "appM" })
-end)
-cmodal:bind("", "Q", "退出 ", function()
-	spoon.ModalMgr:deactivate({ "appM" })
-end)
---cmodal:bind('', 'tab', 'Toggle Cheatsheet', function() spoon.ModalMgr:toggleCheatsheet() end)
-if not hsapp_list then
-	hsapp_list = {
-		{ key = "f", name = "Finder" },
-		{ key = "s", name = "Safari" },
-		{ key = "t", name = "Terminal" },
-		{ key = "v", id = "com.apple.ActivityMonitor" },
-		{ key = "y", id = "com.apple.systempreferences" },
-	}
-end
-for _, v in ipairs(hsapp_list) do
-	if v.id then
-		local located_name = hs.application.nameForBundleID(v.id)
-		if located_name then
-			cmodal:bind("", v.key, located_name, function()
-				hs.application.launchOrFocusByBundleID(v.id)
-				spoon.ModalMgr:deactivate({ "appM" })
-			end)
-		end
-	elseif v.name then
-		cmodal:bind("", v.key, v.name, function()
-			hs.application.launchOrFocus(v.name)
-			spoon.ModalMgr:deactivate({ "appM" })
-		end)
-	end
-end
-
-----------------------------------------------------------------------------------------------------
--- 绑定快捷键
-----------------------------------------------------------------------------------------------------
-hsappM_keys = hsappM_keys or { "alt", "A" }
-if string.len(hsappM_keys[2]) > 0 then
-	spoon.ModalMgr.supervisor:bind(
-		hsappM_keys[1],
-		hsappM_keys[2],
-		" 进入 AppM 模式，快速打开应用",
-		function()
-			spoon.ModalMgr:deactivateAll()
-			spoon.ModalMgr:activate({ "appM" }, "#FFBD2E", true)
-		end
-	)
-end
-
-----------------------------------------------------------------------------------------------------
----------------------------------------- clipshowM 配置 ---------------------------------------------
-----------------------------------------------------------------------------------------------------
-if spoon.ClipShow then
-	spoon.ModalMgr:new("clipshowM")
-	local cmodal = spoon.ModalMgr.modal_list["clipshowM"]
-	cmodal:bind("", "escape", "退出 剪切板", function()
-		spoon.ClipShow:toggleShow()
-		spoon.ModalMgr:deactivate({ "clipshowM" })
-	end)
-	cmodal:bind("", "Q", "退出 剪切板", function()
-		spoon.ClipShow:toggleShow()
-		spoon.ModalMgr:deactivate({ "clipshowM" })
-	end)
-	cmodal:bind("", "N", "保存此会话", function()
-		spoon.ClipShow:saveToSession()
-	end)
-	cmodal:bind("", "R", "恢复上一个会话", function()
-		spoon.ClipShow:restoreLastSession()
-	end)
-	cmodal:bind("", "B", "在浏览器中打开", function()
-		spoon.ClipShow:openInBrowserWithRef()
-		spoon.ClipShow:toggleShow()
-		spoon.ModalMgr:deactivate({ "clipshowM" })
-	end)
-	cmodal:bind("", "S", "用百度搜索", function()
-		spoon.ClipShow:openInBrowserWithRef("https://www.baidu.com/search?q=")
-		spoon.ClipShow:toggleShow()
-		spoon.ModalMgr:deactivate({ "clipshowM" })
-	end)
-	cmodal:bind("", "F", "保存到桌面", function()
-		spoon.ClipShow:saveToFile()
-		spoon.ClipShow:toggleShow()
-		spoon.ModalMgr:deactivate({ "clipshowM" })
-	end)
-	cmodal:bind("", "H", "在 Github 中搜索", function()
-		spoon.ClipShow:openInBrowserWithRef("https://github.com/search?q=")
-		spoon.ClipShow:toggleShow()
-		spoon.ModalMgr:deactivate({ "clipshowM" })
-	end)
-	cmodal:bind("", "G", "使用 Google 搜索", function()
-		spoon.ClipShow:openInBrowserWithRef("https://www.google.com/search?q=")
-		spoon.ClipShow:toggleShow()
-		spoon.ModalMgr:deactivate({ "clipshowM" })
-	end)
-	cmodal:bind("", "L", "用 Sublime Text 打开", function()
-		spoon.ClipShow:openWithCommand("/usr/local/bin/subl")
-		spoon.ClipShow:toggleShow()
-		spoon.ModalMgr:deactivate({ "clipshowM" })
-	end)
-
-	-- 绑定功 clipshowM 快捷键
-	hsclipsM_keys = hsclipsM_keys or { "alt", "C" }
-	if string.len(hsclipsM_keys[2]) > 0 then
-		spoon.ModalMgr.supervisor:bind(hsclipsM_keys[1], hsclipsM_keys[2], "打开剪切板面板", function()
-			spoon.ClipShow:toggleShow()
-			if spoon.ClipShow.canvas:isShowing() then
-				spoon.ModalMgr:deactivateAll()
-				spoon.ModalMgr:activate({ "clipshowM" })
-			end
-		end)
-	end
-end
-
-----------------------------------------------------------------------------------------------------
--- 在浏览器中打开 Hammerspoon API 手册
-----------------------------------------------------------------------------------------------------
--- hsman_keys = hsman_keys or { "alt", "H" }
--- if string.len(hsman_keys[2]) > 0 then
---	spoon.ModalMgr.supervisor:bind(hsman_keys[1], hsman_keys[2], "查看 Hammerspoon 手册", function()
---		hs.doc.hsdocs.forceExternalBrowser(true)
---		hs.doc.hsdocs.moduleEntitiesInSidebar(true)
---		hs.doc.hsdocs.help()
---	end)
--- end
-
-----------------------------------------------------------------------------------------------------
--- countdownM 倒计时配置
-----------------------------------------------------------------------------------------------------
-if spoon.CountDown then
-	spoon.ModalMgr:new("countdownM")
-	local cmodal = spoon.ModalMgr.modal_list["countdownM"]
-	cmodal:bind("", "escape", "退出面板", function()
-		spoon.ModalMgr:deactivate({ "countdownM" })
-	end)
-	cmodal:bind("", "Q", "退出面板", function()
-		spoon.ModalMgr:deactivate({ "countdownM" })
-	end)
-	--cmodal:bind('', 'tab', 'Toggle Cheatsheet', function() spoon.ModalMgr:toggleCheatsheet() end)
-	cmodal:bind("", "0", "1 分钟", function()
-		spoon.CountDown:startFor(1)
-		spoon.ModalMgr:deactivate({ "countdownM" })
-	end)
-	for i = 1, 9 do
-		cmodal:bind("", tostring(i), string.format("%s 分钟", 10 * i), function()
-			spoon.CountDown:startFor(10 * i)
-			spoon.ModalMgr:deactivate({ "countdownM" })
-		end)
-	end
-	cmodal:bind("", "return", "25 分钟 ", function()
-		spoon.CountDown:startFor(25)
-		spoon.ModalMgr:deactivate({ "countdownM" })
-	end)
-	cmodal:bind("", "space", "暂停和恢复倒计时", function()
-		spoon.CountDown:pauseOrResume()
-		spoon.ModalMgr:deactivate({ "countdownM" })
-	end)
-
-	-- 定义打开倒计时面板快捷键
-	hscountdM_keys = hscountdM_keys or { "alt", "I" }
-	if string.len(hscountdM_keys[2]) > 0 then
-		spoon.ModalMgr.supervisor:bind(hscountdM_keys[1], hscountdM_keys[2], "进入倒计时面板", function()
-			spoon.ModalMgr:deactivateAll()
-			-- 显示倒计时面板
-			spoon.ModalMgr:activate({ "countdownM" }, "#FF6347", true)
-		end)
-	end
-end
-
-----------------------------------------------------------------------------------------------------
--- 锁屏
-----------------------------------------------------------------------------------------------------
--- hslock_keys = hslock_keys or { "alt", "L" }
--- if string.len(hslock_keys[2]) > 0 then
---	spoon.ModalMgr.supervisor:bind(hslock_keys[1], hslock_keys[2], "锁屏", function()
---		hs.caffeinate.lockScreen()
---	end)
--- end
-
-----------------------------------------------------------------------------------------------------
--- 窗口管理
-----------------------------------------------------------------------------------------------------
 if spoon.WinWin then
 	spoon.ModalMgr:new("resizeM")
 	local cmodal = spoon.ModalMgr.modal_list["resizeM"]
-	cmodal:bind("", "escape", "退出 ", function()
+	cmodal:bind("", "escape", "退出", function()
 		spoon.ModalMgr:deactivate({ "resizeM" })
 	end)
 	cmodal:bind("", "Q", "退出", function()
@@ -528,7 +276,7 @@ if spoon.WinWin then
 		spoon.WinWin:stash()
 		spoon.WinWin:moveToScreen("up")
 	end)
-	cmodal:bind("", "down", "窗口移动下边屏幕", function()
+	cmodal:bind("", "down", "窗口移至下边屏幕", function()
 		spoon.WinWin:stash()
 		spoon.WinWin:moveToScreen("down")
 	end)
@@ -564,20 +312,273 @@ if spoon.WinWin then
 		spoon.WinWin:moveAndResize("lesshalfright")
 	end)
 
-	cmodal:bind("", "t", "将光标移至所����口中心位置", function()
+	cmodal:bind("", "t", "将光标移至所在窗口中心位置", function()
 		spoon.WinWin:centerCursor()
 	end)
+end
 
-	-- 定义窗口管理模式快捷键
-	hsresizeM_keys = hsresizeM_keys or { "alt", "R" }
-	if string.len(hsresizeM_keys[2]) > 0 then
-		spoon.ModalMgr.supervisor:bind(hsresizeM_keys[1], hsresizeM_keys[2], "进入窗口管理模式", function()
-			spoon.ModalMgr:deactivateAll()
-			-- 显示状态指示器，方便查看所处模式
-			spoon.ModalMgr:activate({ "resizeM" }, "#B22222")
+-- 定义窗口管理模式快捷键
+spoon.ModalMgr.supervisor:bind(hyperKey, "M", "进入窗口管理模式", function()
+	spoon.ModalMgr:deactivateAll()
+	-- 显示状态指示器，方便查看所处模式
+	spoon.ModalMgr:activate({ "resizeM" }, "#0f0")
+end)
+
+--          ╭─────────────────────────────────────────────────────────╮
+--          │                   将鼠标移到其他屏幕                    │
+--          ╰─────────────────────────────────────────────────────────╯
+
+local function focus_other_screen() -- focuses the other screen
+	local screen = hs.mouse.getCurrentScreen()
+	local nextScreen = screen:next()
+	local rect = nextScreen:fullFrame()
+	local center = hs.geometry.rectMidPoint(rect)
+	hs.mouse.setAbsolutePosition(center)
+end
+
+function get_window_under_mouse() -- from https://gist.github.com/kizzx2/e542fa74b80b7563045a
+	local my_pos = hs.geometry.new(hs.mouse.getAbsolutePosition())
+	local my_screen = hs.mouse.getCurrentScreen()
+	return hs.fnutils.find(hs.window.orderedWindows(), function(w)
+		return my_screen == w:screen() and my_pos:inside(w:frame())
+	end)
+end
+
+function activate_other_screen()
+	focus_other_screen()
+	local win = get_window_under_mouse()
+	-- now activate that window
+	win:focus()
+end
+
+-- 显示屏之间切换焦点
+hs.hotkey.bind({ "cmd" }, "escape", function() -- does the keybinding
+	activate_other_screen()
+end)
+
+----------------------------------------------------------------------------------------------------
+---------------------------------------- Spoons 加载项 ----------------------------------------------
+----------------------------------------------------------------------------------------------------
+-- 加载 Spoon
+----------------------------------------------------------------------------------------------------
+
+-- 定义默认加载的 Spoons
+if not hspoon_list then
+	hspoon_list = {
+		"AClock", -- 一个钟
+		"ClipShow", -- 剪切板
+		"KSheet", -- 快捷键
+		"CountDown", -- 倒计时
+		"VolumeScroll", -- 鼠标滚轮调节音量
+		-- "PopupTranslateSelection", -- 翻译选中文本
+		"SpeedMenu", -- 菜单栏显示网速
+		"MountedVolumes", -- 显示已安装卷的饼图
+		"HeadphoneAutoPause", -- 断开耳机自动暂停播放
+		"HSearch",
+	}
+end
+
+-- 加载 Spoons
+for _, v in pairs(hspoon_list) do
+	hs.loadSpoon(v)
+end
+
+----------------------------------------------------------------------------------------------------
+-- 定义各种模式快捷键绑定
+----------------------------------------------------------------------------------------------------
+-- 定义 windowHints 快捷键
+----------------------------------------------------------------------------------------------------
+-- hswhints_keys = hswhints_keys or { "alt", "tab" }
+-- if string.len(hswhints_keys[2]) > 0 then
+-- spoon.ModalMgr.supervisor:bind(hswhints_keys[1], hswhints_keys[2], "WindowHints 快速切换应用", function()
+-- spoon.ModalMgr:deactivateAll()
+-- hs.hints.windowHints()
+-- end)
+-- end
+
+----------------------------------------------------------------------------------------------------
+--------------------------------------- appM 快速打开应用 ---------------------------------------------
+-- appM 模式 快速打开应用
+----------------------------------------------------------------------------------------------------
+spoon.ModalMgr:new("appM")
+local cmodal = spoon.ModalMgr.modal_list["appM"]
+cmodal:bind("", "escape", "退出 ", function()
+	spoon.ModalMgr:deactivate({ "appM" })
+end)
+cmodal:bind("", "Q", "退出 ", function()
+	spoon.ModalMgr:deactivate({ "appM" })
+end)
+--cmodal:bind('', 'tab', 'Toggle Cheatsheet', function() spoon.ModalMgr:toggleCheatsheet() end)
+if not hsapp_list then
+	hsapp_list = {
+		{ key = "f", name = "Finder" },
+		{ key = "s", name = "Safari" },
+		{ key = "t", name = "Terminal" },
+		{ key = "v", id = "com.apple.ActivityMonitor" },
+		{ key = "y", id = "com.apple.systempreferences" },
+	}
+end
+for _, v in ipairs(hsapp_list) do
+	if v.id then
+		local located_name = hs.application.nameForBundleID(v.id)
+		if located_name then
+			cmodal:bind("", v.key, located_name, function()
+				hs.application.launchOrFocusByBundleID(v.id)
+				spoon.ModalMgr:deactivate({ "appM" })
+			end)
+		end
+	elseif v.name then
+		cmodal:bind("", v.key, v.name, function()
+			hs.application.launchOrFocus(v.name)
+			spoon.ModalMgr:deactivate({ "appM" })
 		end)
 	end
 end
+
+----------------------------------------------------------------------------------------------------
+-- 绑定快捷键
+----------------------------------------------------------------------------------------------------
+hsappM_keys = hsappM_keys or { "alt", "A" }
+if string.len(hsappM_keys[2]) > 0 then
+	spoon.ModalMgr.supervisor:bind(
+		hsappM_keys[1],
+		hsappM_keys[2],
+		" 进入 AppM 模式，快速打开应用",
+		function()
+			spoon.ModalMgr:deactivateAll()
+			spoon.ModalMgr:activate({ "appM" }, "#FFBD2E", true)
+		end
+	)
+end
+
+----------------------------------------------------------------------------------------------------
+---------------------------------------- clipshowM 配置 ---------------------------------------------
+----------------------------------------------------------------------------------------------------
+if spoon.ClipShow then
+	spoon.ModalMgr:new("clipshowM")
+	local cmodal = spoon.ModalMgr.modal_list["clipshowM"]
+	cmodal:bind("", "escape", "退出 剪切板", function()
+		spoon.ClipShow:toggleShow()
+		spoon.ModalMgr:deactivate({ "clipshowM" })
+	end)
+	cmodal:bind("", "Q", "退出 剪切板", function()
+		spoon.ClipShow:toggleShow()
+		spoon.ModalMgr:deactivate({ "clipshowM" })
+	end)
+	cmodal:bind("", "N", "保存此会话", function()
+		spoon.ClipShow:saveToSession()
+	end)
+	cmodal:bind("", "R", "恢复上一个会话", function()
+		spoon.ClipShow:restoreLastSession()
+	end)
+	cmodal:bind("", "B", "在浏览器中打开", function()
+		spoon.ClipShow:openInBrowserWithRef()
+		spoon.ClipShow:toggleShow()
+		spoon.ModalMgr:deactivate({ "clipshowM" })
+	end)
+	cmodal:bind("", "S", "用百度搜索", function()
+		spoon.ClipShow:openInBrowserWithRef("https://www.baidu.com/search?q=")
+		spoon.ClipShow:toggleShow()
+		spoon.ModalMgr:deactivate({ "clipshowM" })
+	end)
+	cmodal:bind("", "F", "保存到桌面", function()
+		spoon.ClipShow:saveToFile()
+		spoon.ClipShow:toggleShow()
+		spoon.ModalMgr:deactivate({ "clipshowM" })
+	end)
+	cmodal:bind("", "H", "在 Github 中搜索", function()
+		spoon.ClipShow:openInBrowserWithRef("https://github.com/search?q=")
+		spoon.ClipShow:toggleShow()
+		spoon.ModalMgr:deactivate({ "clipshowM" })
+	end)
+	cmodal:bind("", "G", "使用 Google 搜索", function()
+		spoon.ClipShow:openInBrowserWithRef("https://www.google.com/search?q=")
+		spoon.ClipShow:toggleShow()
+		spoon.ModalMgr:deactivate({ "clipshowM" })
+	end)
+	cmodal:bind("", "L", "用 Sublime Text 打开", function()
+		spoon.ClipShow:openWithCommand("/usr/local/bin/subl")
+		spoon.ClipShow:toggleShow()
+		spoon.ModalMgr:deactivate({ "clipshowM" })
+	end)
+
+	-- 绑定功 clipshowM 快捷键
+	hsclipsM_keys = hsclipsM_keys or { "alt", "C" }
+	if string.len(hsclipsM_keys[2]) > 0 then
+		spoon.ModalMgr.supervisor:bind(hsclipsM_keys[1], hsclipsM_keys[2], "打开剪切板面板", function()
+			spoon.ClipShow:toggleShow()
+			if spoon.ClipShow.canvas:isShowing() then
+				spoon.ModalMgr:deactivateAll()
+				spoon.ModalMgr:activate({ "clipshowM" })
+			end
+		end)
+	end
+end
+
+----------------------------------------------------------------------------------------------------
+-- 在浏览器中打开 Hammerspoon API 手册
+----------------------------------------------------------------------------------------------------
+-- hsman_keys = hsman_keys or { "alt", "H" }
+-- if string.len(hsman_keys[2]) > 0 then
+--	spoon.ModalMgr.supervisor:bind(hsman_keys[1], hsman_keys[2], "���看 Hammerspoon 手册", function()
+--		hs.doc.hsdocs.forceExternalBrowser(true)
+--		hs.doc.hsdocs.moduleEntitiesInSidebar(true)
+--		hs.doc.hsdocs.help()
+--	end)
+-- end
+
+----------------------------------------------------------------------------------------------------
+-- countdownM 倒计时配置
+----------------------------------------------------------------------------------------------------
+if spoon.CountDown then
+	spoon.ModalMgr:new("countdownM")
+	local cmodal = spoon.ModalMgr.modal_list["countdownM"]
+	cmodal:bind("", "escape", "退出面板", function()
+		spoon.ModalMgr:deactivate({ "countdownM" })
+	end)
+	cmodal:bind("", "Q", "退出面板", function()
+		spoon.ModalMgr:deactivate({ "countdownM" })
+	end)
+	--cmodal:bind('', 'tab', 'Toggle Cheatsheet', function() spoon.ModalMgr:toggleCheatsheet() end)
+	cmodal:bind("", "0", "1 分钟", function()
+		spoon.CountDown:startFor(1)
+		spoon.ModalMgr:deactivate({ "countdownM" })
+	end)
+	for i = 1, 9 do
+		cmodal:bind("", tostring(i), string.format("%s 分钟", 10 * i), function()
+			spoon.CountDown:startFor(10 * i)
+			spoon.ModalMgr:deactivate({ "countdownM" })
+		end)
+	end
+	cmodal:bind("", "return", "25 分钟 ", function()
+		spoon.CountDown:startFor(25)
+		spoon.ModalMgr:deactivate({ "countdownM" })
+	end)
+	cmodal:bind("", "space", "暂停和恢复倒计时", function()
+		spoon.CountDown:pauseOrResume()
+		spoon.ModalMgr:deactivate({ "countdownM" })
+	end)
+
+	-- 定义打开倒计时面板快捷键
+	hscountdM_keys = hscountdM_keys or { "alt", "I" }
+	if string.len(hscountdM_keys[2]) > 0 then
+		spoon.ModalMgr.supervisor:bind(hscountdM_keys[1], hscountdM_keys[2], "进入倒计时面板", function()
+			spoon.ModalMgr:deactivateAll()
+			-- 显示倒计时面板
+			spoon.ModalMgr:activate({ "countdownM" }, "#FF6347", true)
+		end)
+	end
+end
+
+----------------------------------------------------------------------------------------------------
+-- 锁屏
+----------------------------------------------------------------------------------------------------
+-- hslock_keys = hslock_keys or { "alt", "L" }
+-- if string.len(hslock_keys[2]) > 0 then
+--	spoon.ModalMgr.supervisor:bind(hslock_keys[1], hslock_keys[2], "锁屏", function()
+--		hs.caffeinate.lockScreen()
+--	end)
+-- end
 
 ----------------------------------------------------------------------------------------------------
 -- 绑定 KSheet 面板 快捷键
@@ -680,8 +681,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 spoon.ModalMgr.supervisor:enter()
-
-
 
 ----------------------------------------------------------------------------------------------------
 -------------------------------------------- End ---------------------------------------------------
