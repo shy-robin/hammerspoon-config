@@ -403,3 +403,36 @@ end
 --          ╰─────────────────────────────────────────────────────────╯
 
 spoon.ModalMgr.supervisor:enter()
+
+--          ╭─────────────────────────────────────────────────────────╮
+--          │                  Chrome 浏览器标签导航                  │
+--          ╰─────────────────────────────────────────────────────────╯
+
+local prevTab = hs.hotkey.new({ "ctrl" }, "H", nil, function()
+	hs.eventtap.keyStroke({ "ctrl", "shift" }, "tab")
+end)
+
+local nextTab = hs.hotkey.new({ "ctrl" }, "L", nil, function()
+	hs.eventtap.keyStroke({ "ctrl" }, "tab")
+end)
+
+local searchTab = hs.hotkey.new({ "ctrl" }, "F", nil, function()
+	hs.eventtap.keyStroke({ "cmd", "shift" }, "A")
+end)
+
+chromeWatcher = hs.application.watcher.new(function(name, eventType, app)
+	if eventType ~= hs.application.watcher.activated then
+		return
+	end
+	if name == "Google Chrome" then
+		prevTab:enable()
+		nextTab:enable()
+		searchTab:enable()
+	else
+		prevTab:disable()
+		nextTab:disable()
+		searchTab:disable()
+	end
+end)
+
+chromeWatcher:start()
