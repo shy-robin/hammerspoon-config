@@ -365,16 +365,10 @@ end)
 -- 定义默认加载的 Spoons
 if not hspoon_list then
 	hspoon_list = {
-		"AClock", -- 一个钟
 		"ClipShow", -- 剪切板
-		"KSheet", -- 快捷键
 		"CountDown", -- 倒计时
 		"VolumeScroll", -- 鼠标滚轮调节音量
 		-- "PopupTranslateSelection", -- 翻译选中文本
-		"SpeedMenu", -- 菜单栏显示网速
-		"MountedVolumes", -- 显示已安装卷的饼图
-		"HeadphoneAutoPause", -- 断开耳机自动暂停播放
-		"HSearch",
 	}
 end
 
@@ -516,18 +510,6 @@ if spoon.ClipShow then
 end
 
 ----------------------------------------------------------------------------------------------------
--- 在浏览器中打开 Hammerspoon API 手册
-----------------------------------------------------------------------------------------------------
--- hsman_keys = hsman_keys or { "alt", "H" }
--- if string.len(hsman_keys[2]) > 0 then
---	spoon.ModalMgr.supervisor:bind(hsman_keys[1], hsman_keys[2], "���看 Hammerspoon 手册", function()
---		hs.doc.hsdocs.forceExternalBrowser(true)
---		hs.doc.hsdocs.moduleEntitiesInSidebar(true)
---		hs.doc.hsdocs.help()
---	end)
--- end
-
-----------------------------------------------------------------------------------------------------
 -- countdownM 倒计时配置
 ----------------------------------------------------------------------------------------------------
 if spoon.CountDown then
@@ -571,54 +553,6 @@ if spoon.CountDown then
 end
 
 ----------------------------------------------------------------------------------------------------
--- 锁屏
-----------------------------------------------------------------------------------------------------
--- hslock_keys = hslock_keys or { "alt", "L" }
--- if string.len(hslock_keys[2]) > 0 then
---	spoon.ModalMgr.supervisor:bind(hslock_keys[1], hslock_keys[2], "锁屏", function()
---		hs.caffeinate.lockScreen()
---	end)
--- end
-
-----------------------------------------------------------------------------------------------------
--- 绑定 KSheet 面板 快捷键
-----------------------------------------------------------------------------------------------------
-if spoon.KSheet then
-	spoon.ModalMgr:new("cheatsheetM")
-	local cmodal = spoon.ModalMgr.modal_list["cheatsheetM"]
-	cmodal:bind("", "escape", "Deactivate cheatsheetM", function()
-		spoon.KSheet:hide()
-		spoon.ModalMgr:deactivate({ "cheatsheetM" })
-	end)
-	cmodal:bind("", "Q", "Deactivate cheatsheetM", function()
-		spoon.KSheet:hide()
-		spoon.ModalMgr:deactivate({ "cheatsheetM" })
-	end)
-
-	-- 定义快捷键
-	hscheats_keys = hscheats_keys or { "alt", "S" }
-	if string.len(hscheats_keys[2]) > 0 then
-		spoon.ModalMgr.supervisor:bind(hscheats_keys[1], hscheats_keys[2], "显示应用快捷键", function()
-			spoon.KSheet:show()
-			spoon.ModalMgr:deactivateAll()
-			spoon.ModalMgr:activate({ "cheatsheetM" })
-		end)
-	end
-end
-
-----------------------------------------------------------------------------------------------------
--- 绑定 AClock 快捷键
-----------------------------------------------------------------------------------------------------
-if spoon.AClock then
-	hsaclock_keys = hsaclock_keys or { "alt", "T" }
-	if string.len(hsaclock_keys[2]) > 0 then
-		spoon.ModalMgr.supervisor:bind(hsaclock_keys[1], hsaclock_keys[2], "时钟", function()
-			spoon.AClock:toggleShow()
-		end)
-	end
-end
---
-----------------------------------------------------------------------------------------------------
 --  绑定 PopupTranslateSelection 快捷键
 ----------------------------------------------------------------------------------------------------
 -- 弹出选中词的翻译面板
@@ -654,34 +588,8 @@ if string.len(hstype_keys[2]) > 0 then
 	)
 end
 
-----------------------------------------------------------------------------------------------------
--- Hammerspoon 搜索
-----------------------------------------------------------------------------------------------------
-if spoon.HSearch then
-	hsearch_keys = hsearch_keys or { "alt", "G" }
-	if string.len(hsearch_keys[2]) > 0 then
-		spoon.ModalMgr.supervisor:bind(hsearch_keys[1], hsearch_keys[2], "启动 Hammerspoon 搜索", function()
-			spoon.HSearch:toggleShow()
-		end)
-	end
-end
-
-----------------------------------------------------------------------------------------------------
--- 快捷显示 Hammerspoon 控制台
-----------------------------------------------------------------------------------------------------
-hsconsole_keys = hsconsole_keys or { "alt", "Z" }
-if string.len(hsconsole_keys[2]) > 0 then
-	spoon.ModalMgr.supervisor:bind(hsconsole_keys[1], hsconsole_keys[2], "打开 Hammerspoon 控制台", function()
-		hs.toggleConsole()
-	end)
-end
-
-----------------------------------------------------------------------------------------------------
--- 初始化 modalMgr
-----------------------------------------------------------------------------------------------------
+--          ╭─────────────────────────────────────────────────────────╮
+--          │                     初始化 modalMgr                     │
+--          ╰─────────────────────────────────────────────────────────╯
 
 spoon.ModalMgr.supervisor:enter()
-
-----------------------------------------------------------------------------------------------------
--------------------------------------------- End ---------------------------------------------------
-----------------------------------------------------------------------------------------------------
