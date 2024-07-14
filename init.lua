@@ -33,7 +33,6 @@ hs.alert.defaultStyle = {
 --          ╰─────────────────────────────────────────────────────────╯
 
 local hyperKey = { "cmd", "alt", "ctrl", "shift" }
-local mediaKey = { "cmd", "alt" }
 
 local function changeVolume(diff)
 	return function()
@@ -48,8 +47,8 @@ local function changeVolume(diff)
 	end
 end
 
-hs.hotkey.bind(mediaKey, "J", changeVolume(-2))
-hs.hotkey.bind(mediaKey, "K", changeVolume(2))
+hs.hotkey.bind(hyperKey, "J", changeVolume(-2))
+hs.hotkey.bind(hyperKey, "K", changeVolume(2))
 
 --          ╭─────────────────────────────────────────────────────────╮
 --          │                      重新加载配置                       │
@@ -299,7 +298,7 @@ if spoon.WinWin then
 		spoon.WinWin:stash()
 		spoon.WinWin:moveAndResize("mostright")
 	end)
-	cmodal:bind("", ",", "左三分之一屏", function()
+	cmodal:bind("", ",", "左三分之一��", function()
 		spoon.WinWin:stash()
 		spoon.WinWin:moveAndResize("lesshalfleft")
 	end)
