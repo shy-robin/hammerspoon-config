@@ -13,7 +13,7 @@ brew install hammerspoon --cask
 将配置文件克隆到本地根目录。
 
 ```
-git clone https://github.com/zuorn/hammerspoon_config ~/.hammerspoon
+git clone https://github.com/shy-robin/hammerspoon-config.git ~/.hammerspoon
 ```
 
 **重新加载配置文件即可生效**。
